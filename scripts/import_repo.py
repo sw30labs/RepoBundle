@@ -16,6 +16,12 @@ import base64
 import argparse
 from pathlib import Path
 
+
+def _emit(log, message):
+    if log is not None:
+        log(message)
+
+
 def parse_export_file(export_file):
     """Parse the exported file and yield (file_path, content, is_binary) tuples."""
     with open(export_file, 'r', encoding='utf-8') as f:
@@ -33,10 +39,14 @@ def parse_export_file(export_file):
             
         file_path = file_sections[i]
         file_content = file_sections[i+1]
+
+        if file_content.startswith('\n'):
+            file_content = file_content[1:]
         
         # Check if this is a binary file
         is_binary = False
-        binary_match = re.match(r'\[Binary file - (\d+) bytes - base64 encoded\]\n([\s\S]*?)(?=\n\n=)', file_content, re.DOTALL)
+        binary_content = file_content.lstrip('\n')
+        binary_match = re.match(r'\[Binary file - (\d+) bytes - base64 encoded\]\n([\s\S]*?)(?=\n\n=)', binary_content, re.DOTALL)
         
         if binary_match:
             is_binary = True
@@ -47,15 +57,40 @@ def parse_export_file(export_file):
         
         yield file_path, file_content, is_binary
 
-def restore_repository(export_file, output_dir):
+
+def _safe_restore_path(output_path, file_path):
+    full_path = (output_path / file_path).resolve()
+    try:
+        full_path.relative_to(output_path)
+    except ValueError:
+        raise ValueError(f"Refusing to restore outside output directory: {file_path}")
+    return full_path
+
+
+def restore_repository(export_file, output_dir, log=print, progress=None):
     """Restore the repository from the exported file."""
-    output_path = Path(output_dir).resolve()
+    export_path = Path(export_file).expanduser().resolve()
+    if not export_path.exists():
+        raise FileNotFoundError(f"Export file not found: {export_path}")
+    if not export_path.is_file():
+        raise IsADirectoryError(f"Export path is not a file: {export_path}")
+
+    output_path = Path(output_dir).expanduser().resolve()
     os.makedirs(output_path, exist_ok=True)
-    
-    print(f"Restoring repository to: {output_path}")
-    
-    for file_path, content, is_binary in parse_export_file(export_file):
-        full_path = output_path / file_path
+
+    summary = {
+        'output_path': str(output_path),
+        'files': 0,
+        'text_files': 0,
+        'binary_files': 0,
+        'errors': 0,
+        'bytes': 0,
+    }
+
+    _emit(log, f"Restoring repository to: {output_path}")
+
+    for file_path, content, is_binary in parse_export_file(export_path):
+        full_path = _safe_restore_path(output_path, file_path)
         
         # Create parent directories if they don't exist
         os.makedirs(full_path.parent, exist_ok=True)
@@ -67,15 +102,27 @@ def restore_repository(export_file, output_dir):
                 binary_data = base64.b64decode(content)
                 with open(full_path, 'wb') as f:
                     f.write(binary_data)
-                print(f"Restored binary file: {file_path} ({len(binary_data)} bytes)")
+                summary['files'] += 1
+                summary['binary_files'] += 1
+                summary['bytes'] += len(binary_data)
+                _emit(log, f"Restored binary file: {file_path} ({len(binary_data)} bytes)")
             else:
                 with open(full_path, 'w', encoding='utf-8') as f:
                     f.write(content)
-                print(f"Restored text file: {file_path} ({len(content)} characters)")
+                summary['files'] += 1
+                summary['text_files'] += 1
+                summary['bytes'] += len(content.encode('utf-8'))
+                _emit(log, f"Restored text file: {file_path} ({len(content)} characters)")
         except Exception as e:
-            print(f"Error restoring {file_path}: {e}")
-    
-    print(f"\nRepository restoration complete to: {output_path}")
+            summary['errors'] += 1
+            _emit(log, f"Error restoring {file_path}: {e}")
+        if progress is not None:
+            progress(dict(summary))
+
+    _emit(log, f"\nRepository restoration complete to: {output_path}")
+    if progress is not None:
+        progress(dict(summary))
+    return summary
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Restore repository from exported file.')

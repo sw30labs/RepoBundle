@@ -136,8 +136,6 @@ def export_repository(root_dir, output_file=None, log=print, progress=None):
                     binary = is_binary(file_path, log=log)
                     content = get_file_contents(file_path, relative_file_path, binary=binary, log=log)
                     outfile.write(content)
-                    if not content.endswith('\n'):
-                        outfile.write('\n')
                     summary['files'] += 1
                     if binary:
                         summary['binary_files'] += 1

@@ -1,0 +1,42 @@
+{
+  "frozen": true,
+  "created_at": "2026-09-07T15:22:44.702899+00:00",
+  "repo": "/Users/spider/REPOS/repo-bundle",
+  "branch": "night/2026-09-07",
+  "remaining_count": 2,
+  "void_count": 0,
+  "upgrades": [
+    {
+      "id": 1,
+      "title": "Harden the landed round-trip check in tests/test_roundtrip.py with three new fixtures \u2014 a CRLF file ('a\\r\\n\\r\\nb\\r\\n'), a UTF-8 multibyte file ('h\u00e9llo w\u00f6rld \ud83c\udf0d\\n'), and a 0-byte empty file \u2014 then fix the newline-translation fidelity drift they expose: get_file_contents in scripts/export_repo.py reads text with universal-newline mode (collapsing \\r\\n to \\n) and scripts/import_repo.py re-reads the bundle the same way, so CRLF files do not survive byte-identical; open all four text handles with newline='' (export read in get_file_contents, export bundle writer, import parse reader, import restore writer)",
+      "check_command": "test -f tests/test_roundtrip.py && /Users/spider/miniconda3/envs/nightshift/bin/python -m pytest tests/test_roundtrip.py -q --rootdir=.",
+      "paths": [
+        "tests/test_roundtrip.py",
+        "scripts/export_repo.py",
+        "scripts/import_repo.py"
+      ],
+      "done": false,
+      "note": "",
+      "void": false,
+      "void_reason": "",
+      "void_by": 0
+    },
+    {
+      "id": 2,
+      "title": "Add tests/test_cli.py \u2014 first subprocess coverage of the command-line entry points (only the library functions are tested today): run scripts/export_repo.py <temp source repo with a text and a binary file> with cwd set to a temp output dir and assert exit 0 plus a *_export_*.txt bundle containing 'REPOSITORY EXPORT:' was created; run scripts/import_repo.py <bundle> -o <temp restore dir> and assert exit 0 and the restored tree is byte-identical to the source; assert --help exits 0 for both scripts; assert importing a nonexistent bundle exits nonzero with 'Error:' in output; repair any CLI bug these runs expose",
+      "check_command": "test -f tests/test_cli.py && /Users/spider/miniconda3/envs/nightshift/bin/python -m pytest tests/test_cli.py -q --rootdir=.",
+      "paths": [
+        "tests/test_cli.py",
+        "scripts/export_repo.py",
+        "scripts/import_repo.py"
+      ],
+      "done": false,
+      "note": "",
+      "void": false,
+      "void_reason": "",
+      "void_by": 0
+    }
+  ],
+  "base_ref": "main",
+  "base_sha": "7a9ab43c35fb5c306774e54aa4ec55a44ef9a08e"
+}

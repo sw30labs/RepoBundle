@@ -12,7 +12,7 @@ A lightweight Python tool for exporting and importing entire repository contents
 - **Human-Readable Format**: Export format is easy to read and review
 - **Hidden File Filtering**: Automatically skips `.git` directories and hidden files
 - **Preserve Directory Structure**: Maintains the complete folder hierarchy
-- **Graphical Interface**: Includes a Raycast-inspired desktop GUI for export/import workflows
+- **Graphical Interface**: Includes a Loopscope-style local browser dashboard for export/import workflows
 - **Cross-Platform**: Works on Windows, macOS, and Linux
 
 ## 📋 Table of Contents
@@ -59,22 +59,32 @@ python scripts/import_repo.py your_export_file.txt
 
 ### Launch the GUI:
 ```bash
-python scripts/gui.py
+./setup_and_run.sh
 ```
+
+The launcher opens `http://127.0.0.1:7790` in your browser. The dashboard requires
+Python 3.7+ with no pip or Tkinter dependencies. Keep the terminal running and
+press Ctrl+C to stop. Use `--port 7791` to change the port, `--no-browser` to
+skip opening a tab, or `--setup-only` to check the environment. Set
+`PYTHON_BIN=/path/to/python` to choose an interpreter. On Windows, run
+`python scripts/gui.py` directly.
 
 ## 📖 Usage
 
 ### Using the GUI
 
-Launch the GUI when you want folder pickers, live activity logs, result summaries, and one-click access to the exported file or restored folder.
-
-<img src="assets/gui-screenshot.png" alt="RepoBundle GUI" width="50%">
+Launch the GUI for a local folder browser, live activity logs, file counts, and
+copyable output paths. Its grid background, white panels, and monospace readouts
+follow Loopscope’s dashboard design.
 
 ```bash
-python scripts/gui.py
+./setup_and_run.sh
 ```
 
-The GUI intentionally exposes only the core actions: select a repository, select where to save the bundle, export it, select an export file, select a restore folder, and import it.
+Choose Export or Restore, browse or enter your local paths, then start the
+operation. Restore requires an empty or new destination folder to prevent
+accidental overwrites. All file processing stays on the machine running the
+launcher; the dashboard listens only on localhost.
 
 ### Exporting a Repository
 
